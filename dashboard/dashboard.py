@@ -17,37 +17,46 @@ df['dteday'] = pd.to_datetime(df['dteday'])
 with st.sidebar:
     st.image("https://github.com/dicodingacademy/assets/raw/main/logo.png")
     
-    # Filter Rentang Waktu
+    # Menyiapkan rentang waktu
     min_date = df["dteday"].min()
     max_date = df["dteday"].max()
     
-    start_date, end_date = st.date_input(
+    # Perbaikan: Tambahkan penanganan agar tidak error saat user memilih tanggal
+    date_range = st.date_input(
         label='Rentang Waktu',
         min_value=min_date,
-        max_value=max_value,
+        max_value=max_date, # Perbaikan Typo dari max_value ke max_date
         value=[min_date, max_date]
     )
 
+# Pastikan date_range memiliki start dan end sebelum filter data
+if len(date_range) == 2:
+    start_date, end_date = date_range
+else:
+    start_date, end_date = min_date, max_date
+
 # Filter Data
-main_df = df[(df["dteday"] >= str(start_date)) & 
-             (df["dteday"] <= str(end_date))]
+main_df = df[(df["dteday"] >= pd.to_datetime(start_date)) & 
+             (df["dteday"] <= pd.to_datetime(end_date))]
 
 # --- MAIN PAGE ---
 st.header('Bike Sharing Dashboard 🚲')
 
-# MEMBUAT TABS (Agar tidak perlu scroll jauh)
+# MEMBUAT TABS
 tab1, tab2, tab3 = st.tabs(["Kondisi Cuaca", "Tren Musim", "Pola Jam"])
 
 # --- ISI TAB 1: CUACA ---
 with tab1:
-    st.subheader('Pengaruh Cuaca Terhadap Penyewaan')
+    st.subheader('Perbedaan Rata-rata Penyewaan Berdasarkan Cuaca')
     weather_df = main_df.groupby('weathersit')['cnt'].mean().reset_index()
     
     fig, ax = plt.subplots(figsize=(10, 5))
-    sns.barplot(x='weathersit', y='cnt', data=weather_df, palette='viridis', ax=ax)
+    # Perbaikan palette: tambahkan hue=x untuk menghilangkan Warning
+    sns.barplot(x='weathersit', y='cnt', data=weather_df, hue='weathersit', palette='viridis', legend=False, ax=ax)
+    ax.set_title("Rata-rata Penyewaan per Kondisi Cuaca")
     st.pyplot(fig)
     
-    st.info("Insight: Cuaca cerah mendominasi total penyewaan harian.")
+    st.info("Insight SMART: Cuaca cerah mendominasi volume penyewaan.")
 
 # --- ISI TAB 2: MUSIM ---
 with tab2:
@@ -55,12 +64,12 @@ with tab2:
     season_df = main_df.groupby('season')['cnt'].mean().reset_index()
     
     fig2, ax2 = plt.subplots(figsize=(10, 5))
-    sns.barplot(x='season', y='cnt', data=season_df, palette='magma', ax=ax2)
+    sns.barplot(x='season', y='cnt', data=season_df, hue='season', palette='magma', legend=False, ax=ax2)
     st.pyplot(fig2)
 
 # --- ISI TAB 3: JAM ---
 with tab3:
-    st.subheader('Pola Penyewaan Berdasarkan Jam Puncak')
+    st.subheader('Pola Penyewaan Berdasarkan Jam Kerja')
     hour_df = main_df.groupby('hr')['cnt'].mean().reset_index()
     
     fig3, ax3 = plt.subplots(figsize=(12, 5))
