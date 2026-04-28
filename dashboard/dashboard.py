@@ -2,13 +2,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
+import os
 
 # Set style seaborn
 sns.set(style='dark')
 
-# Menyiapkan data
-hour_df = pd.read_csv("main_data.csv")
-hour_df['dteday'] = pd.to_datetime(hour_df['dteday'])
+# Mendapatkan path direktori script ini berada
+current_dir = os.path.dirname(__file__)
+file_path = os.path.join(current_dir, "main_data.csv")
+
+# Membaca data
+hour_df = pd.read_csv(file_path)
 
 # Judul Dashboard
 st.header('Bike Sharing Dashboard 🚲')
