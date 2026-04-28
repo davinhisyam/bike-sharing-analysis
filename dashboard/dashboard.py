@@ -7,66 +7,58 @@ import os
 # Set style seaborn
 sns.set(style='dark')
 
-# Mendapatkan path direktori script ini berada
+# Mendapatkan path direktori script
 current_dir = os.path.dirname(__file__)
 file_path = os.path.join(current_dir, "main_data.csv")
 
-# Membaca data
-hour_df = pd.read_csv(file_path)
+# Load data
+df = pd.read_csv(file_path)
+df['dteday'] = pd.to_datetime(df['dteday'])
 
-# Judul Dashboard
+# --- SIDEBAR (FITUR INTERAKTIF) ---
+with st.sidebar:
+    # Menambahkan logo (Gunakan gambar placeholder atau teks jika belum ada file logo)
+    st.image("https://github.com/dicodingacademy/assets/raw/main/logo.png") # Contoh logo dicoding
+    
+    # Mengambil rentang waktu untuk filter
+    min_date = df["dteday"].min()
+    max_date = df["dteday"].max()
+    
+    start_date, end_date = st.date_input(
+        label='Rentang Waktu',
+        min_value=min_date,
+        max_value=max_date,
+        value=[min_date, max_date]
+    )
+
+# Filter dataframe berdasarkan input sidebar
+main_df = df[(df["dteday"] >= str(start_date)) & 
+                (df["dteday"] <= str(end_date))]
+
+# --- MAIN PAGE ---
 st.header('Bike Sharing Dashboard 🚲')
 
-# 1. Visualisasi Pengaruh Cuaca
-st.subheader('Pengaruh Cuaca Terhadap Penyewaan Sepeda')
+# Pertanyaan 1 (SMART)
+st.subheader('Perbedaan Rata-rata Penyewaan Berdasarkan Kondisi Cuaca')
+
+weather_df = main_df.groupby('weathersit')['cnt'].mean().reset_index()
+
 fig, ax = plt.subplots(figsize=(10, 6))
-sns.barplot(
-    x='weathersit', 
-    y='cnt', 
-    data=hour_df, 
-    palette='viridis',
-    errorbar=None,
-    ax=ax
-)
-ax.set_title('Rata-rata Penyewaan Sepeda Berdasarkan Cuaca')
-ax.set_xlabel('Kondisi Cuaca')
-ax.set_ylabel('Rata-rata Penyewaan')
+sns.barplot(x='weathersit', y='cnt', data=weather_df, palette='viridis', ax=ax)
+ax.set_xlabel("Kondisi Cuaca")
+ax.set_ylabel("Rata-rata Penyewaan")
 st.pyplot(fig)
 
-# 2. Visualisasi Tren Musim
-st.subheader('Tren Penyewaan Sepeda Berdasarkan Musim')
-fig, ax = plt.subplots(figsize=(10, 6))
-sns.barplot(
-    x='season', 
-    y='cnt', 
-    data=hour_df, 
-    order=['Spring', 'Summer', 'Fall', 'Winter'],
-    palette='coolwarm',
-    errorbar=None,
-    ax=ax
-)
-ax.set_title('Rata-rata Penyewaan Sepeda Berdasarkan Musim')
-ax.set_xlabel('Musim')
-ax.set_ylabel('Rata-rata Penyewaan')
-st.pyplot(fig)
+# Insight SMART untuk Pertanyaan 1
+st.write(f"**Insight:** Selama periode yang dipilih, rata-rata penyewaan tertinggi terjadi pada cuaca Cerah. "
+         f"Penurunan performa penyewaan sangat terasa ketika cuaca berubah menjadi buruk.")
 
-# 3. Visualisasi Jam Sibuk
-st.subheader('Pola Penyewaan Sepeda Berdasarkan Jam')
-fig, ax = plt.subplots(figsize=(12, 6))
-sns.lineplot(
-    x='hr', 
-    y='cnt', 
-    data=hour_df, 
-    marker='o', 
-    color='tab:blue',
-    errorbar=None,
-    ax=ax
-)
-ax.set_title('Pola Penyewaan Sepeda Harian (0-23 Jam)')
-ax.set_xlabel('Jam')
-ax.set_ylabel('Rata-rata Penyewaan')
-ax.set_xticks(range(0, 24))
-ax.grid(True, linestyle='--', alpha=0.5)
-st.pyplot(fig)
+# Pertanyaan 2
+st.subheader('Tren Penyewaan Berdasarkan Musim')
+season_df = main_df.groupby('season')['cnt'].mean().reset_index()
+
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+sns.barplot(x='season', y='cnt', data=season_df, palette='coolwarm', ax=ax2)
+st.pyplot(fig2)
 
 st.caption('Copyright © Muhammad Davin Al Hisyam 2024')
