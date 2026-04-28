@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 import os
-import datetime
 
 # --- SETUP HALAMAN ---
 st.set_page_config(page_title="Bike Sharing Dashboard", page_icon="🚲", layout="wide")
@@ -90,5 +89,5 @@ with tab3:
     ax.set_ylabel("Rata-rata")
     st.pyplot(fig)
 
-current_year = datetime.date.today().year
-st.caption(f'Copyright © Muhammad Davin Al Hisyam {current_year}')
+
+st.caption(f'Copyright © Muhammad Davin Al Hisyam 2026')
