@@ -5,117 +5,90 @@ import streamlit as st
 import os
 import datetime
 
-# SETUP
+# --- SETUP HALAMAN ---
 st.set_page_config(page_title="Bike Sharing Dashboard", page_icon="🚲", layout="wide")
 
-# Set style seaborn agar lebih elegan (Background putih bersih)
-sns.set_theme(style="whitegrid")
-
-# LOAD DATA 
+# --- LOAD DATA ---
 current_dir = os.path.dirname(__file__)
 file_path = os.path.join(current_dir, "main_data.csv")
 df = pd.read_csv(file_path)
 df['dteday'] = pd.to_datetime(df['dteday'])
 
-# SIDEBAR
+# --- SIDEBAR ---
 with st.sidebar:
-    st.image("https://github.com/dicodingacademy/assets/raw/main/logo.png", width=200)
+    st.image("https://cdn-icons-png.flaticon.com/512/2972/2972185.png", width=100)
     st.markdown("## Filter Data")
-    
-    # Menyiapkan rentang waktu
-    min_date = df["dteday"].min()
-    max_date = df["dteday"].max()
-    
     date_range = st.date_input(
-        label='Pilih Rentang Waktu',
-        min_value=min_date,
-        max_value=max_date,
-        value=[min_date, max_date]
+        label='Rentang Waktu',
+        min_value=df["dteday"].min(),
+        max_value=df["dteday"].max(),
+        value=[df["dteday"].min(), df["dteday"].max()]
     )
 
-# Mencegah error jika user baru pilih 1 tanggal
 if len(date_range) == 2:
     start_date, end_date = date_range
 else:
-    start_date, end_date = min_date, max_date
+    start_date, end_date = df["dteday"].min(), df["dteday"].max()
 
-# Filter Data berdasarkan input tanggal di sidebar
 main_df = df[(df["dteday"] >= pd.to_datetime(start_date)) & 
              (df["dteday"] <= pd.to_datetime(end_date))]
 
-# MAIN PAGE
+# --- MAIN PAGE ---
 st.title('🚲 Bike Sharing Data Dashboard')
-st.markdown("Selamat datang di dashboard analisis data penyewaan sepeda! Gunakan menu di sebelah kiri untuk memfilter data berdasarkan tanggal.")
 
-# KARTU METRIK / SUMMARY
-st.subheader("📌 Summary Kinerja")
-col1, col2, col3 = st.columns(3)
-
+# Summary Metrics
+col1, col2 = st.columns(2)
 with col1:
-    total_rentals = main_df['cnt'].sum()
-    st.metric("Total Penyewaan (Unit)", value=f"{total_rentals:,}")
-
+    st.metric("Total Penyewaan", value=f"{main_df['cnt'].sum():,}")
 with col2:
-    if not main_df.empty:
-        avg_rentals = int(main_df['cnt'].mean())
-    else:
-        avg_rentals = 0
-    st.metric("Rata-rata Penyewaan per Jam", value=f"{avg_rentals:,}")
+    st.metric("Rata-rata Penyewaan/Jam", value=f"{int(main_df['cnt'].mean()):,}")
 
-with col3:
-    if not main_df.empty:
-        peak_day = main_df.groupby(main_df['dteday'].dt.date)['cnt'].sum().idxmax()
-        st.metric("Hari Puncak Penyewaan", value=str(peak_day))
-    else:
-        st.metric("Hari Puncak Penyewaan", value="-")
+tab1, tab2, tab3 = st.tabs(["🌤️ Cuaca", "🌸 Musim", "⏰ Jam"])
 
-st.markdown("---")
-
-# MEMBUAT TABS UNTUK VISUALISASI 
-tab1, tab2, tab3 = st.tabs(["🌤️ Kondisi Cuaca", "🌸 Tren Musim", "⏰ Pola Jam"])
-
-# TAB 1: CUACA 
+# --- TAB 1: CUACA ---
 with tab1:
-    st.subheader('Bagaimana Pengaruh Cuaca Terhadap Penyewaan Sepeda?')
+    st.subheader('Rata-rata Penyewaan Berdasarkan Kondisi Cuaca')
     weather_df = main_df.groupby('weathersit')['cnt'].mean().reset_index()
     
-    fig, ax = plt.subplots(figsize=(10, 5))
-    sns.barplot(x='weathersit', y='cnt', data=weather_df, hue='weathersit', palette='Blues_d', legend=False, ax=ax)
-    ax.set_xlabel('Kondisi Cuaca', fontsize=12)
-    ax.set_ylabel('Rata-rata Penyewaan', fontsize=12)
-    ax.set_title("Rata-rata Penyewaan Berdasarkan Kondisi Cuaca", fontsize=14, pad=15)
-    st.pyplot(fig)
+    # Perbaikan: Perkecil ukuran (figsize 8x4)
+    fig, ax = plt.subplots(figsize=(8, 4))
     
-    st.info("**Insight SMART:** Cuaca Cerah memiliki rata-rata penyewaan tertinggi. Terdapat penurunan drastis pada saat cuaca buruk, sehingga perlu penyesuaian armada lapangan.")
+    # Perbaikan Warna: Gunakan satu warna, highlight yang tertinggi
+    colors = ["#D3D3D3" if (x < max(weather_df['cnt'])) else "#1f77b4" for x in weather_df['cnt']]
+    
+    sns.barplot(x='weathersit', y='cnt', data=weather_df, palette=colors, ax=ax)
+    ax.set_xlabel(None)
+    ax.set_ylabel("Rata-rata")
+    ax.tick_params(axis='both', labelsize=10)
+    st.pyplot(fig)
+    st.info("Highlight warna biru menunjukkan kondisi cuaca dengan rata-rata penyewaan tertinggi.")
 
-# TAB 2: MUSIM 
+# --- TAB 2: MUSIM ---
 with tab2:
-    st.subheader('Musim Apa yang Paling Ramai?')
+    st.subheader('Rata-rata Penyewaan Berdasarkan Musim')
     season_df = main_df.groupby('season')['cnt'].mean().reset_index()
     
-    fig2, ax2 = plt.subplots(figsize=(10, 5))
-    sns.barplot(x='season', y='cnt', data=season_df, hue='season', palette='autumn', legend=False, ax=ax2)
-    ax2.set_xlabel('Musim', fontsize=12)
-    ax2.set_ylabel('Rata-rata Penyewaan', fontsize=12)
-    ax2.set_title("Rata-rata Penyewaan Berdasarkan Musim", fontsize=14, pad=15)
-    st.pyplot(fig2)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    # Highlight warna untuk musim tertinggi
+    colors_season = ["#D3D3D3" if (x < max(season_df['cnt'])) else "#1f77b4" for x in season_df['cnt']]
+    
+    sns.barplot(x='season', y='cnt', data=season_df, palette=colors_season, ax=ax)
+    ax.set_xlabel(None)
+    ax.set_ylabel("Rata-rata")
+    st.pyplot(fig)
 
-# TAB 3: JAM 
+# --- TAB 3: JAM ---
 with tab3:
-    st.subheader('Kapan Jam Sibuk (Peak Hours) Terjadi?')
+    st.subheader('Tren Penyewaan Berdasarkan Jam')
     hour_df = main_df.groupby('hr')['cnt'].mean().reset_index()
     
-    fig3, ax3 = plt.subplots(figsize=(12, 5))
-    sns.lineplot(x='hr', y='cnt', data=hour_df, marker='o', color='#1f77b4', linewidth=2.5, ax=ax3)
-    ax3.set_xlabel('Jam (0-23)', fontsize=12)
-    ax3.set_ylabel('Rata-rata Penyewaan', fontsize=12)
-    ax3.set_title("Pola Penyewaan Sepeda Harian", fontsize=14, pad=15)
-    ax3.set_xticks(range(0, 24))
-    ax3.grid(axis='x', alpha=0.3)
-    st.pyplot(fig3)
-    
-    st.info("**Insight SMART:** Puncak penyewaan terjadi pada jam berangkat kerja (08:00) dan pulang kerja (17:00). Jadwal pemeliharaan sepeda disarankan pada jam non-sibuk (10:00 - 14:00).")
+    # Gunakan Line Chart karena lebih efektif untuk data waktu (Time Series)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    sns.lineplot(x='hr', y='cnt', data=hour_df, marker='o', color="#1f77b4", ax=ax)
+    ax.set_xticks(range(0, 24))
+    ax.set_xlabel("Jam")
+    ax.set_ylabel("Rata-rata")
+    st.pyplot(fig)
 
-# --- COPYRIGHT DINAMIS ---
 current_year = datetime.date.today().year
 st.caption(f'Copyright © Muhammad Davin Al Hisyam {current_year}')
