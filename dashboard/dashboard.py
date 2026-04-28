@@ -5,21 +5,21 @@ import streamlit as st
 import os
 import datetime
 
-# --- SETUP HALAMAN STREAMLIT ---
+# SETUP
 st.set_page_config(page_title="Bike Sharing Dashboard", page_icon="🚲", layout="wide")
 
 # Set style seaborn agar lebih elegan (Background putih bersih)
 sns.set_theme(style="whitegrid")
 
-# --- LOAD DATA ---
+# LOAD DATA 
 current_dir = os.path.dirname(__file__)
 file_path = os.path.join(current_dir, "main_data.csv")
 df = pd.read_csv(file_path)
 df['dteday'] = pd.to_datetime(df['dteday'])
 
-# --- SIDEBAR (FILTER INTERAKTIF) ---
+# SIDEBAR
 with st.sidebar:
-    st.image("dashboard/Bicycle.png", width=200)
+    st.image("https://github.com/dicodingacademy/assets/raw/main/logo.png", width=200)
     st.markdown("## Filter Data")
     
     # Menyiapkan rentang waktu
@@ -43,11 +43,11 @@ else:
 main_df = df[(df["dteday"] >= pd.to_datetime(start_date)) & 
              (df["dteday"] <= pd.to_datetime(end_date))]
 
-# --- MAIN PAGE (KONTEN UTAMA) ---
+# MAIN PAGE
 st.title('🚲 Bike Sharing Data Dashboard')
 st.markdown("Selamat datang di dashboard analisis data penyewaan sepeda! Gunakan menu di sebelah kiri untuk memfilter data berdasarkan tanggal.")
 
-# --- KARTU METRIK / SUMMARY (Ini yang bikin makin interaktif!) ---
+# KARTU METRIK / SUMMARY
 st.subheader("📌 Summary Kinerja")
 col1, col2, col3 = st.columns(3)
 
@@ -71,10 +71,10 @@ with col3:
 
 st.markdown("---")
 
-# --- MEMBUAT TABS UNTUK VISUALISASI ---
+# MEMBUAT TABS UNTUK VISUALISASI 
 tab1, tab2, tab3 = st.tabs(["🌤️ Kondisi Cuaca", "🌸 Tren Musim", "⏰ Pola Jam"])
 
-# --- ISI TAB 1: CUACA ---
+# TAB 1: CUACA 
 with tab1:
     st.subheader('Bagaimana Pengaruh Cuaca Terhadap Penyewaan Sepeda?')
     weather_df = main_df.groupby('weathersit')['cnt'].mean().reset_index()
@@ -88,7 +88,7 @@ with tab1:
     
     st.info("**Insight SMART:** Cuaca Cerah memiliki rata-rata penyewaan tertinggi. Terdapat penurunan drastis pada saat cuaca buruk, sehingga perlu penyesuaian armada lapangan.")
 
-# --- ISI TAB 2: MUSIM ---
+# TAB 2: MUSIM 
 with tab2:
     st.subheader('Musim Apa yang Paling Ramai?')
     season_df = main_df.groupby('season')['cnt'].mean().reset_index()
@@ -100,7 +100,7 @@ with tab2:
     ax2.set_title("Rata-rata Penyewaan Berdasarkan Musim", fontsize=14, pad=15)
     st.pyplot(fig2)
 
-# --- ISI TAB 3: JAM ---
+# TAB 3: JAM 
 with tab3:
     st.subheader('Kapan Jam Sibuk (Peak Hours) Terjadi?')
     hour_df = main_df.groupby('hr')['cnt'].mean().reset_index()
