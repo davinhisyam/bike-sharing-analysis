@@ -19,7 +19,7 @@ df['dteday'] = pd.to_datetime(df['dteday'])
 
 # --- SIDEBAR (FILTER INTERAKTIF) ---
 with st.sidebar:
-    st.image("https://github.com/dicodingacademy/assets/raw/main/logo.png", width=200)
+    st.image("dashboard/Bicycle.png", width=200)
     st.markdown("## Filter Data")
     
     # Menyiapkan rentang waktu
